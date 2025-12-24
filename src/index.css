@@ -1,0 +1,534 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 20% 8%;
+    --foreground: 60 10% 95%;
+
+    --card: 220 25% 12%;
+    --card-foreground: 60 10% 95%;
+    --card-glow: 45 100% 50%;
+
+    --popover: 220 25% 12%;
+    --popover-foreground: 60 10% 95%;
+
+    --primary: 25 100% 55%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 25 100% 60%;
+
+    --secondary: 270 70% 50%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-glow: 270 80% 60%;
+
+    --muted: 220 20% 18%;
+    --muted-foreground: 220 10% 55%;
+
+    --accent: 45 100% 50%;
+    --accent-foreground: 220 20% 8%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 145 70% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 220 20% 20%;
+    --input: 220 20% 15%;
+    --ring: 25 100% 55%;
+
+    --radius: 0.75rem;
+
+    /* Game-specific tokens */
+    --health-full: 145 70% 45%;
+    --health-mid: 45 100% 50%;
+    --health-low: 0 75% 55%;
+    
+    --player-color: 25 100% 55%;
+    --player-glow: 25 100% 60%;
+    
+    --enemy-color: 270 70% 50%;
+    --enemy-glow: 270 80% 60%;
+    
+    --arena-gradient: linear-gradient(180deg, hsl(220 25% 6%) 0%, hsl(220 30% 12%) 50%, hsl(220 25% 8%) 100%);
+    --card-back-gradient: linear-gradient(145deg, hsl(220 30% 18%) 0%, hsl(220 25% 10%) 100%);
+    --card-front-gradient: linear-gradient(145deg, hsl(220 25% 22%) 0%, hsl(220 30% 15%) 100%);
+  }
+
+  .dark {
+    --background: 220 20% 8%;
+    --foreground: 60 10% 95%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+    background: var(--arena-gradient);
+  }
+}
+
+@layer components {
+  .font-display {
+    font-family: 'Orbitron', sans-serif;
+  }
+
+  .font-body {
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  /* Health bar styles */
+  .health-bar-container {
+    @apply relative h-6 rounded-lg overflow-hidden;
+    background: linear-gradient(180deg, hsl(220 25% 8%) 0%, hsl(220 30% 12%) 100%);
+    border: 2px solid hsl(220 20% 25%);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  .health-bar-fill {
+    @apply h-full transition-all duration-500 ease-out;
+    background: linear-gradient(180deg, hsl(var(--health-full)) 0%, hsl(145 70% 35%) 100%);
+    box-shadow: 0 0 10px hsl(var(--health-full) / 0.5);
+  }
+
+  .health-bar-fill.mid {
+    background: linear-gradient(180deg, hsl(var(--health-mid)) 0%, hsl(35 100% 40%) 100%);
+    box-shadow: 0 0 10px hsl(var(--health-mid) / 0.5);
+  }
+
+  .health-bar-fill.low {
+    background: linear-gradient(180deg, hsl(var(--health-low)) 0%, hsl(0 70% 40%) 100%);
+    box-shadow: 0 0 10px hsl(var(--health-low) / 0.5);
+    animation: pulse-health 0.5s ease-in-out infinite;
+  }
+
+  /* Card styles */
+  .game-card {
+    @apply relative cursor-pointer;
+    perspective: 1000px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease-out;
+  }
+
+  .game-card:hover:not(.flipped):not(.matched) {
+    transform: scale(1.08) translateY(-4px);
+  }
+
+  .game-card:hover:not(.flipped):not(.matched) .game-card-back {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 25px hsl(var(--accent) / 0.4);
+    border-color: hsl(var(--accent) / 0.6);
+  }
+
+  .game-card-inner {
+    @apply relative w-full h-full;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  .game-card.flipped .game-card-inner {
+    transform: rotateY(180deg);
+  }
+
+  .game-card-face {
+    @apply absolute w-full h-full rounded-xl flex items-center justify-center font-display font-bold overflow-hidden;
+    backface-visibility: hidden;
+  }
+
+  .game-card-back {
+    background: linear-gradient(145deg, hsl(220 30% 20%) 0%, hsl(220 25% 12%) 50%, hsl(220 30% 8%) 100%);
+    border: 2px solid hsl(var(--accent) / 0.25);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 hsl(220 30% 30%);
+    transition: all 0.3s ease-out;
+  }
+
+  .card-back-pattern {
+    @apply absolute inset-0;
+    background-image: 
+      radial-gradient(circle at 25% 25%, hsl(var(--accent) / 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, hsl(var(--secondary) / 0.1) 0%, transparent 50%);
+    animation: card-shimmer 3s ease-in-out infinite;
+  }
+
+  .game-card-back::before {
+    content: '⚔️';
+    font-size: 1.5rem;
+    opacity: 0.7;
+    z-index: 1;
+    animation: card-icon-pulse 2s ease-in-out infinite;
+  }
+
+  .game-card-front {
+    transform: rotateY(180deg);
+    background: linear-gradient(145deg, hsl(220 25% 18%) 0%, hsl(220 30% 12%) 100%);
+    border: 2px solid hsl(var(--accent) / 0.5);
+    box-shadow: 
+      0 4px 20px rgba(0, 0, 0, 0.5), 
+      0 0 30px hsl(var(--accent) / 0.3),
+      inset 0 1px 0 hsl(220 30% 30%);
+    color: hsl(var(--accent));
+    text-shadow: 0 0 15px hsl(var(--accent) / 0.6);
+  }
+
+  .game-card-front img {
+    animation: card-image-reveal 0.5s ease-out 0.3s both;
+  }
+
+  .game-card.matched {
+    animation: match-success 0.6s ease-out forwards;
+  }
+
+  .game-card.matched .game-card-front {
+    border-color: hsl(var(--success));
+    box-shadow: 0 0 40px hsl(var(--success) / 0.7), 0 0 80px hsl(var(--success) / 0.4);
+  }
+
+  /* Character styles */
+  .character {
+    @apply flex flex-col items-center;
+  }
+
+  .character-sprite {
+    @apply text-6xl md:text-8xl transition-transform duration-300;
+    filter: drop-shadow(0 0 20px currentColor);
+  }
+
+  .player-sprite {
+    color: hsl(var(--player-color));
+    filter: drop-shadow(0 0 30px hsl(var(--player-glow) / 0.6));
+  }
+
+  .enemy-sprite {
+    color: hsl(var(--enemy-color));
+    filter: drop-shadow(0 0 30px hsl(var(--enemy-glow) / 0.6));
+  }
+
+  .player-attack {
+    animation: player-attack 0.4s ease-out;
+  }
+
+  .enemy-attack {
+    animation: enemy-attack 0.4s ease-out;
+  }
+
+  .character-hit {
+    animation: hit-flash 0.3s ease-out;
+  }
+
+  /* Button styles */
+  .btn-battle {
+    @apply px-8 py-4 text-xl md:text-2xl font-display font-bold rounded-xl uppercase tracking-wider;
+    background: linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(15 100% 45%) 100%);
+    border: 2px solid hsl(var(--primary-glow));
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.5), inset 0 1px 0 hsl(var(--primary-glow) / 0.5);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    transition: all 0.2s ease-out;
+  }
+
+  .btn-battle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 50px hsl(var(--primary) / 0.7), inset 0 1px 0 hsl(var(--primary-glow) / 0.5);
+  }
+
+  .btn-battle:active {
+    transform: scale(0.98);
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 text-lg font-display font-bold rounded-xl uppercase tracking-wider text-foreground;
+    background: linear-gradient(180deg, hsl(220 25% 20%) 0%, hsl(220 30% 12%) 100%);
+    border: 2px solid hsl(var(--border));
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease-out;
+  }
+
+  .btn-secondary:hover {
+    border-color: hsl(var(--accent) / 0.5);
+    box-shadow: 0 0 20px hsl(var(--accent) / 0.3);
+  }
+
+  .btn-icon {
+    @apply p-3 rounded-lg text-muted-foreground hover:text-foreground;
+    background: linear-gradient(180deg, hsl(220 25% 18%) 0%, hsl(220 30% 12%) 100%);
+    border: 1px solid hsl(var(--border) / 0.5);
+    transition: all 0.2s ease-out;
+  }
+
+  .btn-icon:hover {
+    border-color: hsl(var(--accent) / 0.5);
+    box-shadow: 0 0 15px hsl(var(--accent) / 0.3);
+  }
+
+  /* Level select card */
+  .level-select-card {
+    @apply p-4 rounded-xl text-left transition-all duration-300;
+    background: linear-gradient(145deg, hsl(220 25% 16%) 0%, hsl(220 30% 10%) 100%);
+    border: 2px solid hsl(var(--border) / 0.5);
+  }
+
+  .level-select-card:not(.locked):hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  }
+
+  .level-select-card.locked {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  .level-select-card.enemy-wolf:not(.locked) {
+    border-color: hsl(30 60% 40% / 0.6);
+  }
+  .level-select-card.enemy-wolf:not(.locked):hover {
+    box-shadow: 0 0 30px hsl(30 60% 40% / 0.4);
+  }
+
+  .level-select-card.enemy-zombie:not(.locked) {
+    border-color: hsl(120 40% 35% / 0.6);
+  }
+  .level-select-card.enemy-zombie:not(.locked):hover {
+    box-shadow: 0 0 30px hsl(120 40% 35% / 0.4);
+  }
+
+  .level-select-card.enemy-vampire:not(.locked) {
+    border-color: hsl(0 70% 40% / 0.6);
+  }
+  .level-select-card.enemy-vampire:not(.locked):hover {
+    box-shadow: 0 0 30px hsl(0 70% 40% / 0.4);
+  }
+
+  .level-select-card.enemy-skeleton:not(.locked) {
+    border-color: hsl(45 20% 60% / 0.6);
+  }
+  .level-select-card.enemy-skeleton:not(.locked):hover {
+    box-shadow: 0 0 30px hsl(45 20% 60% / 0.4);
+  }
+
+  .level-select-card.enemy-dragon:not(.locked) {
+    border-color: hsl(var(--accent) / 0.6);
+    background: linear-gradient(145deg, hsl(25 40% 18%) 0%, hsl(220 30% 10%) 100%);
+  }
+  .level-select-card.enemy-dragon:not(.locked):hover {
+    box-shadow: 0 0 40px hsl(var(--accent) / 0.5);
+  }
+
+  /* Enemy type colors */
+  .enemy-wolf {
+    color: hsl(30 60% 50%);
+    filter: drop-shadow(0 0 25px hsl(30 60% 40% / 0.6));
+  }
+
+  .enemy-zombie {
+    color: hsl(120 40% 45%);
+    filter: drop-shadow(0 0 25px hsl(120 50% 35% / 0.6));
+  }
+
+  .enemy-vampire {
+    color: hsl(0 70% 50%);
+    filter: drop-shadow(0 0 25px hsl(0 80% 40% / 0.6));
+  }
+
+  .enemy-skeleton {
+    color: hsl(45 20% 70%);
+    filter: drop-shadow(0 0 25px hsl(45 20% 60% / 0.6));
+  }
+
+  .enemy-dragon {
+    color: hsl(var(--accent));
+    filter: drop-shadow(0 0 35px hsl(var(--accent) / 0.7)) drop-shadow(0 0 60px hsl(25 100% 50% / 0.4));
+  }
+
+  /* Overlay styles */
+  .game-overlay {
+    @apply fixed inset-0 flex items-center justify-center z-50;
+    background: radial-gradient(ellipse at center, hsl(220 25% 8% / 0.95) 0%, hsl(220 30% 4% / 0.98) 100%);
+    backdrop-filter: blur(8px);
+  }
+
+  .victory-text {
+    @apply text-5xl md:text-7xl font-display font-black uppercase;
+    background: linear-gradient(180deg, hsl(var(--success)) 0%, hsl(145 80% 60%) 50%, hsl(var(--success)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 40px hsl(var(--success) / 0.5);
+    animation: victory-glow 1s ease-in-out infinite alternate;
+  }
+
+  .defeat-text {
+    @apply text-5xl md:text-7xl font-display font-black uppercase;
+    background: linear-gradient(180deg, hsl(var(--destructive)) 0%, hsl(0 80% 65%) 50%, hsl(var(--destructive)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: defeat-shake 0.5s ease-in-out;
+  }
+
+  .champion-text {
+    @apply text-4xl md:text-6xl font-display font-black uppercase;
+    background: linear-gradient(180deg, hsl(var(--accent)) 0%, hsl(55 100% 60%) 50%, hsl(var(--accent)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: champion-glow 0.5s ease-in-out infinite alternate;
+  }
+
+  /* Level indicator */
+  .level-badge {
+    @apply px-4 py-2 rounded-lg font-display font-bold text-sm uppercase tracking-wider;
+    background: linear-gradient(180deg, hsl(220 30% 18%) 0%, hsl(220 25% 12%) 100%);
+    border: 1px solid hsl(var(--accent) / 0.4);
+    color: hsl(var(--accent));
+    text-shadow: 0 0 8px hsl(var(--accent) / 0.5);
+  }
+
+  /* Combo badge */
+  .combo-badge {
+    @apply flex items-center gap-2 px-4 py-2 rounded-full font-display font-bold uppercase tracking-wider;
+    background: linear-gradient(180deg, hsl(var(--accent)) 0%, hsl(35 100% 40%) 100%);
+    color: hsl(var(--background));
+    box-shadow: 0 0 30px hsl(var(--accent) / 0.7), inset 0 1px 0 hsl(55 100% 70% / 0.5);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@layer utilities {
+  @keyframes pulse-health {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  @keyframes player-attack {
+    0% { transform: translateX(0) scale(1); }
+    25% { transform: translateX(30px) scale(1.15); }
+    50% { transform: translateX(60px) scale(1.3) rotate(5deg); }
+    75% { transform: translateX(30px) scale(1.15); }
+    100% { transform: translateX(0) scale(1); }
+  }
+
+  @keyframes enemy-attack {
+    0% { transform: translateX(0) scale(1); }
+    25% { transform: translateX(-30px) scale(1.15); }
+    50% { transform: translateX(-60px) scale(1.3) rotate(-5deg); }
+    75% { transform: translateX(-30px) scale(1.15); }
+    100% { transform: translateX(0) scale(1); }
+  }
+
+  @keyframes hit-flash {
+    0% { filter: brightness(1) drop-shadow(0 0 20px currentColor); }
+    20% { filter: brightness(3) drop-shadow(0 0 40px hsl(0 100% 60%)); transform: scale(0.9); }
+    40% { filter: brightness(0.5) drop-shadow(0 0 10px currentColor); }
+    60% { filter: brightness(2) drop-shadow(0 0 30px hsl(0 100% 50%)); }
+    100% { filter: brightness(1) drop-shadow(0 0 20px currentColor); transform: scale(1); }
+  }
+
+  @keyframes match-success {
+    0% { transform: scale(1); opacity: 1; }
+    30% { transform: scale(1.15) rotate(5deg); }
+    50% { transform: scale(1.2) rotate(-3deg); }
+    70% { transform: scale(1.1) rotate(2deg); opacity: 0.8; }
+    100% { transform: scale(0) rotate(180deg); opacity: 0; pointer-events: none; }
+  }
+
+  @keyframes match-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 0; }
+  }
+
+  @keyframes card-shimmer {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes card-icon-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.1); opacity: 1; }
+  }
+
+  @keyframes card-image-reveal {
+    0% { opacity: 0; transform: scale(0.8) rotateY(10deg); }
+    100% { opacity: 1; transform: scale(1) rotateY(0deg); }
+  }
+
+  @keyframes victory-glow {
+    0% { filter: drop-shadow(0 0 20px hsl(var(--success) / 0.5)); }
+    100% { filter: drop-shadow(0 0 40px hsl(var(--success) / 0.8)); }
+  }
+
+  @keyframes defeat-shake {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    10%, 50%, 90% { transform: translateX(-10px) rotate(-2deg); }
+    30%, 70% { transform: translateX(10px) rotate(2deg); }
+  }
+
+  @keyframes champion-glow {
+    0% { 
+      filter: drop-shadow(0 0 30px hsl(var(--accent) / 0.6)); 
+      transform: scale(1); 
+    }
+    100% { 
+      filter: drop-shadow(0 0 60px hsl(var(--accent) / 1)) drop-shadow(0 0 100px hsl(var(--accent) / 0.5)); 
+      transform: scale(1.03); 
+    }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes float-rotate {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-15px) rotate(3deg); }
+  }
+
+  @keyframes damage-flash {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  @keyframes screen-shake {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(-3px, 2px); }
+    40% { transform: translate(3px, -2px); }
+    60% { transform: translate(-2px, -1px); }
+    80% { transform: translate(2px, 1px); }
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-float-rotate {
+    animation: float-rotate 4s ease-in-out infinite;
+  }
+
+  @keyframes combo-pop {
+    0% { transform: translateX(-50%) scale(0.5); opacity: 0; }
+    50% { transform: translateX(-50%) scale(1.3); }
+    70% { transform: translateX(-50%) scale(0.95); }
+    100% { transform: translateX(-50%) scale(1); opacity: 1; }
+  }
+
+  .animate-combo-pop {
+    animation: combo-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% { 
+      box-shadow: 0 0 20px hsl(var(--accent) / 0.4), 0 0 40px hsl(var(--accent) / 0.2);
+    }
+    50% { 
+      box-shadow: 0 0 30px hsl(var(--accent) / 0.6), 0 0 60px hsl(var(--accent) / 0.3);
+    }
+  }
+
+  .animate-glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+}
